@@ -17,7 +17,7 @@ run_object="build/onnx_ssg "
 model_path=" data/script_model.onnx"
 data_path=" data/test_data.bin"
 label_path=" data/test_label.bin"
-test_len=16
+test_len=12
 time_b=[]
 acc_b=[]
 
@@ -47,7 +47,7 @@ for b in b_size:
         acc_b.append(time[l-3][17:])
 
 item=0
-fw=open("test.json",'w')
+fw=open("test-runtime-oct-fcs-p.json",'w')
 for b in b_size:
     time_total=0.0
     time_ave=0.0

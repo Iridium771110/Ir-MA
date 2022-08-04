@@ -5,6 +5,17 @@ grouping(full_features_map,grouping_index): #对full_features_map按照grouping_
         #(B, C, N) tensor,(B, c_n, s_n) tensor ->(B, C, c_n, s_n) tensor
 */
 #include "common.h"
+// void copy_features(int64_t center_num,int64_t sample_num,int64_t p_s_index_bias,
+// 					const int* group_index_ptr, const float* p_f_ptr, float* p_o_ptr){
+// 	for (int64_t c=0;c<center_num;c++){
+// 		const int* p_s_ptr=group_index_ptr+p_s_index_bias+c*sample_num;
+// 		for (int64_t s=0;s<sample_num;s++){
+// 			int p_sample_index=p_s_ptr[s];
+// 			*p_o_ptr=p_f_ptr[p_sample_index];
+// 			p_o_ptr+=1;
+// 		}
+// 	}
+// };
 
 template<typename T>
 struct GroupingKernel{
@@ -80,23 +91,48 @@ void GroupingKernel<T>::Compute(OrtKernelContext *context){
 
 
 	//------- try other order
+	// for (int64_t b=0;b<b_size;b++){
+	// 	f_index_bias=b*fea_num*points_num;
+	// 	s_index_bias=b*center_num*sample_num;
+	// 	o_index_bias=b*fea_num*center_num*sample_num;
+	// 	for (int64_t f=0;f<fea_num;f++){
+	// 		f_index_base=f_index_bias+f*points_num;
+	// 		o_index=o_index_bias+f*o_bias;
+	// 		for (int64_t c=0;c<center_num;c++){
+	// 			s_index=s_index_bias+c*sample_num;
+	// 			for (int64_t s=0;s<sample_num;s++){
+	// 				sample_index=group_index_ptr[s_index];
+	// 				s_index++;
+	// 				f_index=f_index_base+sample_index;
+	// 				sampled_fea_ptr[o_index]=input_features_ptr[f_index];
+	// 				o_index++;
+	// 			}
+	// 		}		
+	// 	}
+	// }
+
+	//-----try paralell
+	
 	for (int64_t b=0;b<b_size;b++){
-		f_index_bias=b*fea_num*points_num;
-		s_index_bias=b*center_num*sample_num;
-		o_index_bias=b*fea_num*center_num*sample_num;
+		int64_t p_f_index_bias=b*fea_num*points_num;
+		int64_t p_s_index_bias=b*center_num*sample_num;
+		int64_t p_o_index_bias=b*fea_num*center_num*sample_num;
+
+		//std::cout<<fea_num<<std::endl;
+		#pragma omp parallel for num_threads(4)
 		for (int64_t f=0;f<fea_num;f++){
-			f_index_base=f_index_bias+f*points_num;
-			o_index=o_index_bias+f*o_bias;
+			const T* p_f_ptr=input_features_ptr+p_f_index_bias+f*points_num;
+			T* p_o_ptr=sampled_fea_ptr+p_o_index_bias+f*o_bias;
+			
+			//copy_features(center_num,sample_num,p_s_index_bias,group_index_ptr,p_f_ptr,p_o_ptr);
 			for (int64_t c=0;c<center_num;c++){
-				s_index=s_index_bias+c*sample_num;
+				const int* p_s_ptr=group_index_ptr+p_s_index_bias+c*sample_num;
 				for (int64_t s=0;s<sample_num;s++){
-					sample_index=group_index_ptr[s_index];
-					s_index++;
-					f_index=f_index_base+sample_index;
-					sampled_fea_ptr[o_index]=input_features_ptr[f_index];
-					o_index++;
+					int p_sample_index=p_s_ptr[s];
+					*p_o_ptr=p_f_ptr[p_sample_index];
+					p_o_ptr+=1;
 				}
-			}		
+			}
 		}
 	}
 };

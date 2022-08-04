@@ -8,6 +8,8 @@ sampling(points_xyz,sample_num): #对points_xyz采样sample_num个点，返回�
 //#include "onnxruntime_cxx_api.h"
 #include "common.h"
 
+//extern float *max_dist;
+
 template <typename T>
 struct SamplingKernel{
         private:

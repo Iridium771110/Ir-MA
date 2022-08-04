@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include "onnxruntime_cxx_api.h"
+#include <omp.h>
 
 struct INPUT{
     char* name;

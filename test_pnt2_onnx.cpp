@@ -139,6 +139,8 @@ int main(int argc, char** argv){
     custom_op_domain.Add(&onnx_grouping);
     custom_op_domain.Add(&onnx_ball_query);
 
+    //max_dist= new float[4096];
+
     struct timeval t1,t2;
     long sec,usec;
     gettimeofday(&t1,NULL);
@@ -155,5 +157,8 @@ int main(int argc, char** argv){
     std::cout<<sec<<'.';
     std::cout<<std::setw(6)<<std::setfill('0')<<usec<<std::endl;
     
+    //delete []max_dist;
+    //max_dist=nullptr;
+
     return 0;
 }

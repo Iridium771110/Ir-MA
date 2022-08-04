@@ -59,8 +59,7 @@ void BallQueryKernel<T>::Compute(OrtKernelContext *context){
 	int* sampled_index_ptr=ort_.GetTensorMutableData<int>(output);
 	OrtTensorTypeAndShapeInfo* output_info=ort_.GetTensorTypeAndShape(output);
 	ort_.ReleaseTensorTypeAndShapeInfo(output_info);
-
-    cpp_knn_radius(points_ptr,points_num,3,center_ptr,center_num,sample_num,radius,sampled_index_ptr);
-
+	
+    batch_cpp_knn_radius(points_ptr,b_size,points_num,3,center_ptr,center_num,sample_num,radius,sampled_index_ptr);
 };
 #endif
